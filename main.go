@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	_"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
@@ -35,9 +35,8 @@ func (u User) Login(user, password string) (string, string) {
 	return "No", "NO"
 }
 
-func (t Token) GenerateToken(SignatureStr string) (string, string) {
+func (t Token) GenerateToken(SignatureStr string) (string, error) {
 	var claim Claim
-	var tokenStr string
 
 	claim.Id = SignatureStr
 	claim.exp = time.Now().Add(time.Hour * 1).Unix()
@@ -47,12 +46,11 @@ func (t Token) GenerateToken(SignatureStr string) (string, string) {
 	token.Claims = structs.Map(claim)
 
 	if tokenStr, err := token.SignedString([]byte(secret)); err == nil {
-		fmt.Println(tokenStr) //TODO 1. aquí si lo genera
+		return tokenStr, nil
 	} else {
-		return "", fmt.Sprintf("Error signing token: %v", err)
+		return "", err
 	}
-	//TODO 3. Aquí deberíamos implementar el storage
-	return tokenStr, ""
+    //TODO Storage
 }
 
 func main() {
@@ -79,13 +77,12 @@ func LoginUser(c *gin.Context) {
 	tokener = token
 
 	SignatureStr, email := loginer.Login(user.Username, user.Password)
-	//token := tokens.GenerateToken(SignatureStr)
 	tokenStr, err := tokener.GenerateToken(SignatureStr)
 
-	if err != "" {
+	if err != nil {
 		c.JSON(404, gin.H{"error": err})
 	} else {
-		c.JSON(201, gin.H{"token": tokenStr, "email": email})//TODO 2. Aquí no lo está imprimiendo
+		c.JSON(201, gin.H{"token": tokenStr, "email": email})
 	}
 
 }
