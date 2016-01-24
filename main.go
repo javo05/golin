@@ -1,8 +1,9 @@
 package main
 
 import (
-	jwt_lib "github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/contrib/jwt"
+	_"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
 	"github.com/gophergala2016/golin/login"
 	"github.com/gophergala2016/golin/tokens"
@@ -22,6 +23,11 @@ type Token struct {
 	Token string
 }
 
+type Claim struct {
+	Id  string
+	exp int64
+}
+
 func (u User) Login(user, password string) (string, string) {
 	if password == "qwerty" {
 		return user, "chavo@smmx.in"
@@ -29,22 +35,29 @@ func (u User) Login(user, password string) (string, string) {
 	return "No", "NO"
 }
 
-func (t Token) GenerateToken(SignatureStr string) string {
-	var tokenStr string
+func (t Token) GenerateToken(SignatureStr string) (string, error) {
+	var claim Claim
 
-	token := jwt_lib.New(jwt_lib.GetSigningMethod("HS256"))
-	token.Claims["ID"] = SignatureStr
-	token.Claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
-	tokenStr, _ = token.SignedString([]byte(secret))
+	claim.Id = SignatureStr
+	claim.exp = time.Now().Add(time.Hour * 1).Unix()
 
-	return tokenStr
+	alg := jwt.GetSigningMethod("HS256")
+	token := jwt.New(alg)
+	token.Claims = structs.Map(claim)
+
+	if tokenStr, err := token.SignedString([]byte(secret)); err == nil {
+		return tokenStr, nil
+	} else {
+		return "", err
+	}
+    //TODO Storage
 }
 
 func main() {
 	r := gin.Default()
 	publics := r.Group("api/v1/public")
 	privates := r.Group("api/v1/private")
-	privates.Use(jwt.Auth(secret))
+	//privates.Use(jwt.Auth(secret)) //TODO Change by verify method
 	privates.GET("/users/:id", GetUser)
 	publics.POST("/users", LoginUser)
 	r.Run(":8080")
@@ -53,6 +66,7 @@ func main() {
 func LoginUser(c *gin.Context) {
 	var user User
 	var loginer login.Loginer
+	var tokenStr string
 
 	var token Token
 	var tokener tokens.Tokener
@@ -63,8 +77,13 @@ func LoginUser(c *gin.Context) {
 	tokener = token
 
 	SignatureStr, email := loginer.Login(user.Username, user.Password)
-	//token := tokens.GenerateToken(SignatureStr)
-	c.JSON(201, gin.H{"token": tokener.GenerateToken(SignatureStr), "email": email})
+	tokenStr, err := tokener.GenerateToken(SignatureStr)
+
+	if err != nil {
+		c.JSON(404, gin.H{"error": err})
+	} else {
+		c.JSON(201, gin.H{"token": tokenStr, "email": email})
+	}
 
 }
 
