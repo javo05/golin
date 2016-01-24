@@ -11,9 +11,14 @@ import (
 	"regexp"
 	"strings"
 	"time"
+    "github.com/boltdb/bolt"
+    "github.com/gophergala2016/golin/boltdb"
+    "log"
+    "time"
 )
 
 var secret = "ChAvO"
+var db *bolt.DB
 
 type User struct {
 	AccountId string `json:"account_id,omitempty"`
@@ -57,7 +62,12 @@ func (t Token) GenerateToken(SignatureStr string) (string, error) {
 }
 
 func main() {
+    var err error
 	r := gin.Default()
+    db, err = boltdb.OpenBoltDB("tokenss")
+    if err != nil {
+        log.Fatal(err)
+    }
 	publics := r.Group("api/v1/public")
 	privates := r.Group("api/v1/private")
 	//privates.Use(jwt.Auth(secret)) //TODO Change by verify method
@@ -114,11 +124,16 @@ func LoginUser(c *gin.Context) {
 	tokenStr, err := tokener.GenerateToken(SignatureStr)
 
 	if err != nil {
-		c.JSON(404, gin.H{"error": err})
-	} else {
-		c.JSON(201, gin.H{"token": tokenStr, "email": email})
-	}
-
+		c.JSON(404, gin.H{"error generating token": err})
+    } else {
+        data := structs.Map(user)
+        err = boltdb.UpdateBucket(db, tokenStr, data)
+        if err != nil {
+            c.JSON(404, gin.H{"error updating bucket": err})
+        } else {
+            c.JSON(201, gin.H{"token": tokenStr, "email": email})
+        }
+    }
 }
 
 func GetUser(c *gin.Context) {
