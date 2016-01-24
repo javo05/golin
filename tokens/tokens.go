@@ -1,7 +1,7 @@
 package tokens
 
 type Tokener interface {
-	GenerateToken(SignaturStr string) string
+	GenerateToken(SignaturStr string) (string, string)
 }
 
 var secret = "ChAvO"

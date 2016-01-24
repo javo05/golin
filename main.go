@@ -1,8 +1,9 @@
 package main
 
 import (
-	jwt_lib "github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/contrib/jwt"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
 	"github.com/gophergala2016/golin/login"
 	"github.com/gophergala2016/golin/tokens"
@@ -22,6 +23,11 @@ type Token struct {
 	Token string
 }
 
+type Claim struct {
+	Id  string
+	exp int64
+}
+
 func (u User) Login(user, password string) (string, string) {
 	if password == "qwerty" {
 		return user, "chavo@smmx.in"
@@ -29,22 +35,31 @@ func (u User) Login(user, password string) (string, string) {
 	return "No", "NO"
 }
 
-func (t Token) GenerateToken(SignatureStr string) string {
+func (t Token) GenerateToken(SignatureStr string) (string, string) {
+	var claim Claim
 	var tokenStr string
 
-	token := jwt_lib.New(jwt_lib.GetSigningMethod("HS256"))
-	token.Claims["ID"] = SignatureStr
-	token.Claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
-	tokenStr, _ = token.SignedString([]byte(secret))
+	claim.Id = SignatureStr
+	claim.exp = time.Now().Add(time.Hour * 1).Unix()
 
-	return tokenStr
+	alg := jwt.GetSigningMethod("HS256")
+	token := jwt.New(alg)
+	token.Claims = structs.Map(claim)
+
+	if tokenStr, err := token.SignedString([]byte(secret)); err == nil {
+		fmt.Println(tokenStr) //TODO 1. aquí si lo genera
+	} else {
+		return "", fmt.Sprintf("Error signing token: %v", err)
+	}
+	//TODO 3. Aquí deberíamos implementar el storage
+	return tokenStr, ""
 }
 
 func main() {
 	r := gin.Default()
 	publics := r.Group("api/v1/public")
 	privates := r.Group("api/v1/private")
-	privates.Use(jwt.Auth(secret))
+	//privates.Use(jwt.Auth(secret)) //TODO Change by verify method
 	privates.GET("/users/:id", GetUser)
 	publics.POST("/users", LoginUser)
 	r.Run(":8080")
@@ -53,6 +68,7 @@ func main() {
 func LoginUser(c *gin.Context) {
 	var user User
 	var loginer login.Loginer
+	var tokenStr string
 
 	var token Token
 	var tokener tokens.Tokener
@@ -64,7 +80,13 @@ func LoginUser(c *gin.Context) {
 
 	SignatureStr, email := loginer.Login(user.Username, user.Password)
 	//token := tokens.GenerateToken(SignatureStr)
-	c.JSON(201, gin.H{"token": tokener.GenerateToken(SignatureStr), "email": email})
+	tokenStr, err := tokener.GenerateToken(SignatureStr)
+
+	if err != "" {
+		c.JSON(404, gin.H{"error": err})
+	} else {
+		c.JSON(201, gin.H{"token": tokenStr, "email": email})//TODO 2. Aquí no lo está imprimiendo
+	}
 
 }
 
