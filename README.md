@@ -13,8 +13,8 @@ BoltDB is used to storage and Tokens and is designed to have a Blacklist for tok
 Here are some useful links we read for understanding JWT and some logins procedures:
   http://blog.brainattica.com/restful-json-api-jwt-go/
   https://github.com/gin-gonic/contrib/blob/master/jwt/example/example.go
-  https://github.com/SermoDigital/jose
   http://golangtutorials.blogspot.mx/2011/06/interfaces-in-go.html
-  https://medium.com/@etiennerouzeaud/how-to-create-a-basic-restful-api-in-go-c8e032ba3181#.qec40ube8
   https://github.com/boltdb/bolt#resources
+  http://jwt.io/
+  https://tools.ietf.org/html/rfc7519
   
