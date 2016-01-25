@@ -3,21 +3,30 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+    "github.com/boltdb/bolt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
+    "github.com/gophergala2016/golin/boltdb"
 	"github.com/gophergala2016/golin/login"
 	"github.com/gophergala2016/golin/tokens"
+    "log"
 	"regexp"
 	"strings"
 	"time"
-    "github.com/boltdb/bolt"
-    "github.com/gophergala2016/golin/boltdb"
-    "log"
-    "time"
 )
 
+// This secret should be included via a configuration file
+// The configuration file should also include to which DB it should
+// connnect to retrieve and ensure the login of the users.
+// ANother things that the configuration file should include are
+// the tables where the users information are and also which 
+// columns to look into.
 var secret = "ChAvO"
+
+// BoltDB was used because of it's speed and architecture goes
+// very well accordingly into what we want to achieve, which is
+// a secure and fast service to consume tokens.
 var db *bolt.DB
 
 type User struct {
@@ -36,13 +45,17 @@ type Claim struct {
 	exp int64
 }
 
+// This is where config file should be used to read and compare users
+// since this is the MVP of this microservice, this works for achieving
+// what we want.
 func (u User) Login(user, password string) (string, string) {
 	if password == "qwerty" {
-		return user, "chavo@smmx.in"
+		return user, "chavo@segundamano.mx"
 	}
 	return "No", "NO"
 }
 
+// JWT way to create and generate tokens
 func (t Token) GenerateToken(SignatureStr string) (string, error) {
 	var claim Claim
 
@@ -58,19 +71,18 @@ func (t Token) GenerateToken(SignatureStr string) (string, error) {
 	} else {
 		return "", err
 	}
-	//TODO Storage
 }
 
+// Use config file to decide which DB you'll be using for storing the tokens
 func main() {
     var err error
 	r := gin.Default()
-    db, err = boltdb.OpenBoltDB("tokenss")
+    db, err = boltdb.OpenBoltDB("tokens")
     if err != nil {
         log.Fatal(err)
     }
 	publics := r.Group("api/v1/public")
 	privates := r.Group("api/v1/private")
-	//privates.Use(jwt.Auth(secret)) //TODO Change by verify method
 	privates.GET("/users/:id", GetUser)
 	publics.POST("/users", LoginUser)
 	r.Run(":8080")
@@ -107,6 +119,8 @@ func ValidateToken(encriptedToken string) (string, error) {
 	return string(tokData), err
 }
 
+// These are the endpoints required to do a login and verifying that tokens are
+// alive 
 func LoginUser(c *gin.Context) {
 	var user User
 	var loginer login.Loginer
@@ -136,6 +150,8 @@ func LoginUser(c *gin.Context) {
     }
 }
 
+// Here we use the function to validate if a token exists and if the user should
+// alllowed to enter and go through
 func GetUser(c *gin.Context) {
 	_ = c.Params.ByName("id")
 	var currentToken string

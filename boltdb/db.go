@@ -1,10 +1,13 @@
 package boltdb
+/*
+/   This is just a small adapter to do some particular wrapping of the
+/   boltdb/bolt library so it fits with our needs
+/
+*/
 
 import (
 	"fmt"
     "github.com/boltdb/bolt"
-	_"github.com/gophergala2016/golin/tokens"
-	_"time"
 )
 
 func OpenBoltDB(name string) (*bolt.DB, error){
