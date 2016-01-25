@@ -21,6 +21,6 @@ Here are some useful links we read for understanding JWT and some logins procedu
   
 ## TODO
 
-Some configurations added using a file needs to be done
-Some DB connections to ensure MVP functionality
+- Some configurations added using a file needs to be done
+- Some DB connections to ensure MVP functionality
   
