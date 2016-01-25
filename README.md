@@ -17,4 +17,10 @@ Here are some useful links we read for understanding JWT and some logins procedu
   - https://github.com/boltdb/bolt#resources
   - http://jwt.io/
   - https://tools.ietf.org/html/rfc7519
+  - 
+  
+## TODO
+
+Some configurations added using a file needs to be done
+Some DB connections to ensure MVP functionality
   
