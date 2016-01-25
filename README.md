@@ -6,9 +6,9 @@ The project uses JWT as a way of securing the comunication bewteen the client an
 
 Interfaces and some abstractions were made to make it as generic as possible, this could be changed to use some configuration files or changing the login methods.
 
-This microservice is designed to be scalable since for example it can be set aside of any API and just coordinate the validation of the tokens and can grow accordingly to the needs of the stack. 
+This microservice is designed to be scalable since for example, it can be set aside of any API and just coordinate the validation of the tokens and can grow accordingly to the needs of the stack. 
 
-GinGonic was used to build the API since it's quick to develop and easy to maintain and debug. Also BoltDB is used to storage Tokens and is designed to have a Blacklist for tokens that are no longer valid because of logout.
+GinGonic was used to build the API since it's quick to develop and easy to maintain and debug. Also BoltDB is used to storage Tokens and is designed to have a Blacklist for tokens that are no longer valid because of logout. A library for JWT is also include to create verification and sign methods.
 
 Here are some useful links we read for understanding JWT and some logins procedures:
   - http://blog.brainattica.com/restful-json-api-jwt-go/
