@@ -1,6 +1,6 @@
 # golin
 
-Golin is an approach to create a microservice that allows multiple services to use authentication without needing to implement it.
+Golin is an approach to create a microservice that allows multiple systems or apps to use authentication without needing to implement it by their own.
 
 The project uses JWT as a way of securing the comunication bewteen the client and the login server. Please refer to the RFC7519 for details (it's included in the links below).
 
